@@ -8,6 +8,7 @@ Written by Waleed Abdulla
 """
 
 import os
+# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 import random
 import datetime
 import re
@@ -24,7 +25,7 @@ import keras.engine as KE
 import keras.models as KM
 from keras.backend.tensorflow_backend import set_session
 gpu_config = tf.ConfigProto()
-gpu_config.gpu_options.per_process_gpu_memory_fraction = 0.2
+gpu_config.gpu_options.per_process_gpu_memory_fraction = 0.70
 set_session(tf.Session(config=gpu_config))
 from mrcnn import utils
 

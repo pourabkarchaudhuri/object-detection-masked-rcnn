@@ -8,7 +8,7 @@ import coco
 import mrcnn.utils
 import mrcnn.model as modellib
 
-ROOT_DIR = os.getcwd()
+# ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 if not os.path.exists(COCO_MODEL_PATH):
@@ -85,17 +85,30 @@ def display_instances(image, boxes, masks, ids, names, scores):
             continue
 
         y1, x1, y2, x2 = boxes[i]
+        print(boxes[i])
         label = names[ids[i]]
-        color = class_dict[label]
-        score = scores[i] if scores is not None else None
-        caption = '{} {:.2f}'.format(label, score) if score else label
-        mask = masks[:, :, i]
+        if label == "person":
 
-        image = apply_mask(image, mask, color)
-        image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
-        image = cv2.putText(
-            image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2
-        )
+            color = class_dict[label]
+            score = scores[i] if scores is not None else None
+            caption = '{} {:.2f}'.format(label, score) if score else label
+            mask = masks[:, :, i]
+            labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            top = max(x1, labelSize[1])
+            
+           
+           
+    
+            image = apply_mask(image, mask, color)
+            
+
+            image = cv2.rectangle(image, (x1, y1 - round(1.5 * labelSize[1])), (x1 + round(1.5 * labelSize[0]) + 20, y1 + baseLine),
+                        (255, 255, 255), cv2.FILLED)
+            image = cv2.rectangle(image, (x1, y1 + 10), (x2, y2), color, 1)
+            # image = cv2.putText(
+            #     image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2
+            # )
+            image = cv2.putText(image, caption, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.50, color, 1)
 
     return image
 
