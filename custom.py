@@ -41,6 +41,7 @@ ROOT_DIR = ROOT_DIR = os.getcwd()
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
+from mrcnn import visualize
 
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -82,13 +83,14 @@ class CustomConfig(Config):
 class CustomDataset(utils.Dataset):
 
     def load_custom(self, dataset_dir, subset):
+        print("load")
         """Load a subset of the Balloon dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
         self.add_class("damage", 1, "damage")
-
+        
         # Train or validation dataset?
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
@@ -213,14 +215,19 @@ def color_splash(image, mask):
         splash = np.where(mask, image, gray).astype(np.uint8)
     else:
         splash = gray
-    return splash
+    # **
+    return image
 
 
 def detect_and_color_splash(model, image_path=None, video_path=None):
     assert image_path or video_path
-
+    dataset_path = 'C:/Users/44185/Desktop/MaskedRCNNs/object-detection-masked-rcnn-Copy/dataset'
+    print("class names")
     # Image or video?
     if image_path:
+        dataset_val = CustomDataset()
+        dataset_val.load_custom(dataset_path, "val")
+        dataset_val.prepare()
         # Run model detection and generate the color splash effect
         print("Running on {}".format(args.image))
         # Read image
@@ -230,8 +237,9 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         # Color splash
         splash = color_splash(image, r['masks'])
         # Save output
-        file_name = "splash_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
-        skimage.io.imsave(file_name, splash)
+        file_name = "i_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
+        skimage.io.imsave(file_name, visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], 
+                            dataset_val.class_names, r['scores']))
     elif video_path:
         import cv2
         # Video capture
