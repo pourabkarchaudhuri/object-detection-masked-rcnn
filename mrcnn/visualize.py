@@ -18,10 +18,11 @@ from skimage.measure import find_contours
 import matplotlib.pyplot as plt
 from matplotlib import patches,  lines
 from matplotlib.patches import Polygon
-import IPython.display
+# import IPython.display
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
+OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -53,7 +54,8 @@ def display_images(images, titles=None, cols=4, cmap=None, norm=None,
         plt.imshow(image.astype(np.uint8), cmap=cmap,
                    norm=norm, interpolation=interpolation)
         i += 1
-    plt.show()
+    # plt.show()
+    plt.savefig(os.path.join(OUTPUT_DIR, 'demo.png'), bbox_inches='tight')
 
 
 def random_colors(N, bright=True):
@@ -164,7 +166,8 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
     if auto_show:
-        plt.show()
+        # plt.show()
+        plt.savefig(os.path.join(OUTPUT_DIR, 'demo.png'), bbox_inches='tight')
 
 
 def display_differences(image,
