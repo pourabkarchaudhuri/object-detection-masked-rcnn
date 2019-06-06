@@ -14,7 +14,8 @@ import sys
 # import coco
 
 # Load the pre-trained model data
-
+OUTPUT_DIR = os.path.join(ROOT_DIR, 'output')
+INPUT_DIR = os.path.join(ROOT_DIR, 'demo_dataset')
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 if not os.path.exists(COCO_MODEL_PATH):
@@ -134,7 +135,8 @@ def transparent_back(image):
 
 if __name__ == "__main__":
     # image = cv2.imread(sys.argv[1], -1)
-    image = cv2.imread('shubham.jpg')
+
+    image = cv2.imread(os.path.join(INPUT_DIR, 'pourab.jpg'))
     height, width, channels = image.shape
     results = model.detect([image], verbose=0)
     r = results[0]
@@ -142,9 +144,11 @@ if __name__ == "__main__":
          image, r['rois'], r['masks'], r['class_ids'], class_names, r['scores']
     )
 
-    cv2.imwrite('temp.png', image)
+    temp = 'temp.png'
+    cv2.imwrite(os.path.join(OUTPUT_DIR, temp), image)
 
-    image = PIL.Image.open("./temp.png")
+    image = PIL.Image.open('./output/' + temp)
     image = transparent_back(image)
-    image.save("removed_back.png")
+    os.remove(os.path.join(OUTPUT_DIR, temp))
+    image.save(os.path.join(OUTPUT_DIR, 'removed_background.png'))
     

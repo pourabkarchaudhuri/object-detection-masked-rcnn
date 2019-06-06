@@ -18,7 +18,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../")
+# ROOT_DIR = os.path.abspath("../")
+ROOT_DIR = os.getcwd()
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -29,7 +30,7 @@ from mrcnn import visualize
 sys.path.append(os.path.join(ROOT_DIR, "samples/coco/"))  # To find local version
 import coco
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+# get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
@@ -41,7 +42,7 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 # Directory of images to run detection on
-IMAGE_DIR = os.path.join(ROOT_DIR, "images")
+IMAGE_DIR = os.path.join(ROOT_DIR, "demo_dataset")
 
 
 # ## Configurations
@@ -119,14 +120,15 @@ class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
 
 # ## Run Object Detection
 
-# In[5]:
 
 
 # Load a random image from the images folder
-# file_names = next(os.walk(IMAGE_DIR))[2]
-filename = os.path.join(IMAGE_DIR, '8734543718_37f6b8bd45_z.jpg')
-# image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
-image = skimage.io.imread(filename)
+file_names = next(os.walk(IMAGE_DIR))[2]
+# file_names = os.walk(IMAGE_DIR)
+# filename = os.path.join(IMAGE_DIR, '8734543718_37f6b8bd45_z.jpg')
+selection = random.choice(file_names)
+image = skimage.io.imread(os.path.join(IMAGE_DIR, selection))
+# image = skimage.io.imread(filename)
 
 # Run detection
 results = model.detect([image], verbose=1)
