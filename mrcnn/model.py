@@ -1287,7 +1287,7 @@ def load_image_gt(dataset, config, image_id, augment=False, augmentation=None,
     # Image meta data
     image_meta = compose_image_meta(image_id, original_shape, image.shape,
                                     window, scale, active_class_ids)
-
+    print("1290",image_meta)
     return image, image_meta, class_ids, bbox, mask
 
 
@@ -1861,6 +1861,7 @@ class MaskRCNN():
             shape=[None, None, config.IMAGE_SHAPE[2]], name="input_image")
         input_image_meta = KL.Input(shape=[config.IMAGE_META_SIZE],
                                     name="input_image_meta")
+        print("{\n 1864\n }",input_image_meta)
         if mode == "training":
             # RPN GT
             input_rpn_match = KL.Input(
@@ -2365,7 +2366,7 @@ class MaskRCNN():
             workers = 0
         else:
             workers = multiprocessing.cpu_count()
-
+        print("2368",workers)
         self.keras_model.fit_generator(
             train_generator,
             initial_epoch=self.epoch,
@@ -2749,6 +2750,7 @@ def compose_image_meta(image_id, original_image_shape, image_shape,
         [scale] +                     # size=1
         list(active_class_ids)        # size=num_classes
     )
+    print ("2752",meta)
     return meta
 
 

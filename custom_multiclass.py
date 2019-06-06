@@ -41,7 +41,7 @@ ROOT_DIR = ROOT_DIR = os.getcwd()
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
-
+from mrcnn import visualize
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
@@ -59,7 +59,7 @@ class CustomConfig(Config):
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "part"
+    NAME = "vehicle"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -92,11 +92,9 @@ class CustomDataset(utils.Dataset):
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("part", 1, "rear_bumper")
-        self.add_class("part", 2, "front_bumper")
-        self.add_class("part", 3, "headlamp")
-        self.add_class("part", 4, "door")
-        self.add_class("part", 5, "hood")
+        self.add_class("vehicle", 1, "car_damage")
+        self.add_class("vehicle", 2, "bus_damage")
+    
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -129,28 +127,27 @@ class CustomDataset(utils.Dataset):
 
         # Add images
         for a in annotations:
-            # print(a)
+            print("\na['regions']   :\n",a['regions'])
+            for r in a['regions']:
+                print ("\n",r)
+                # print("\n",r['name'])
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. There are stores in the
             # shape_attributes (see json format above)
             #for r in a['regions']:
                 #polygons = [{'all_points_x': r['shape_attributes']['all_points_x'], 'all_points_y': r['shape_attributes']['all_points_y']}]
-            polygons = [r['shape_attributes'] for r in a['regions']]
-            objects = [s['region_attributes'] for s in a['regions']]
+            
+                polygons = [r['shape_attributes'] for r in a['regions'].values()]
+            
+                objects = [s['region_attributes'] for s in a['regions'].values()]
             #num_ids = [int(class_nums[n['name']]) for n in objects]
             num_ids = []
             for n in objects:
                 try:
-                    if n['name'] == 'rear_bumper':
+                    if n['vehicle'] == '1':
                         num_ids.append(1)
-                    elif n['name'] == 'front_bumper':
+                    elif n['vehicle'] == '2':
                         num_ids.append(2)
-                    elif n['name'] == 'headlamp':
-                        num_ids.append(3)
-                    elif n['name'] == 'hood':
-                        num_ids.append(4)
-                    elif n['name'] == 'door':
-                        num_ids.append(5)
                 except:
                     pass
             # load_mask() needs the image size to convert polygons to masks.
@@ -161,7 +158,7 @@ class CustomDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "part",  # for a single class just add the name here
+                "vehicle",  # for a single class just add the name here
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
@@ -176,11 +173,11 @@ class CustomDataset(utils.Dataset):
         class_ids: a 1D array of class IDs of the instance masks.
         """
         # If not a balloon dataset image, delegate to parent class.
-        image_info = self.image_info[image_id]
-        if image_info["source"] != "balloon":
+        info = self.image_info[image_id]
+        if info["source"] != "vehicle":
             return super(self.__class__, self).load_mask(image_id)
 
-        info = self.image_info[image_id]
+        num_ids = info['num_ids']
         # Convert polygons to a bitmap mask of shape
         # [height, width, instance_count]
         mask = np.zeros([info["height"], info["width"], len(info["polygons"])],
@@ -192,13 +189,16 @@ class CustomDataset(utils.Dataset):
             mask[rr, cc, i] = 1
         # print("info['num_ids']=", info['num_ids'])
         # Map class names to class IDs.
-        num_ids = info['num_ids']
-        return mask.astype(np.bool), num_ids.astype(np.int32)
+        # num_ids = info['num_ids']
+        # return mask.astype(np.bool), num_ids.astype(np.int32)
+        num_ids = np.array(num_ids, dtype=np.int32)
+        return mask, num_ids
+
 
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "part":
+        if info["source"] == "vehicle":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
@@ -244,14 +244,17 @@ def color_splash(image, mask):
         splash = np.where(mask, image, gray).astype(np.uint8)
     else:
         splash = gray
-    return splash
+    return image
 
 
 def detect_and_color_splash(model, image_path=None, video_path=None):
     assert image_path or video_path
-
+    dataset_path = 'C:/Users/44185/Desktop/MaskedRCNNs/object-detection-masked-rcnn-Copy/dataset'
     # Image or video?
     if image_path:
+        dataset_val = CustomDataset()
+        dataset_val.load_custom(dataset_path, "val")
+        dataset_val.prepare()
         # Run model detection and generate the color splash effect
         print("Running on {}".format(args.image))
         # Read image
@@ -262,7 +265,9 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         splash = color_splash(image, r['masks'])
         # Save output
         file_name = "splash_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
-        skimage.io.imsave(file_name, splash)
+        # skimage.io.imsave(file_name, splash)
+        skimage.io.imsave(file_name, visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], 
+                            dataset_val.class_names, r['scores']))
     elif video_path:
         import cv2
         # Video capture
